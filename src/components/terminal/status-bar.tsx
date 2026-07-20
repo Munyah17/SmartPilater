@@ -14,6 +14,7 @@ import {
 import { useClock } from "@/hooks/use-clock";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToHome } from "@/components/back-to-home";
 import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +103,7 @@ export function TerminalStatusBar({
           <span className="w-10 text-right tabular text-foreground">
             {now ? formatTime(now) : "--:--"}
           </span>
+          <BackToHome iconOnly />
           <ThemeToggle className="-my-1.5 size-7" />
         </div>
       </div>

@@ -4,6 +4,7 @@ import { BusFront, ChevronRight, QrCode } from "lucide-react";
 import { demoOrg, demoRoutes, demoVehicles } from "@/lib/demo-data";
 import { formatFare } from "@/lib/format";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToHome } from "@/components/back-to-home";
 
 export const metadata: Metadata = {
   title: "Pay your fare",
@@ -19,6 +20,7 @@ export default function PayIndexPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 py-10">
+      <BackToHome className="mb-4" />
       <div className="flex items-center gap-2.5">
         <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
           <QrCode className="size-5" />

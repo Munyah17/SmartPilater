@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToHome } from "@/components/back-to-home";
 import {
   demoConductors,
   demoDrivers,
@@ -221,13 +222,16 @@ export function PublicPayFlow({ vehicleId }: { vehicleId: string }) {
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 py-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Link
-          href="/pay"
-          className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="size-4" />
-          All kombis
-        </Link>
+        <div className="flex flex-col items-start gap-1">
+          <Link
+            href="/pay"
+            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="size-4" />
+            All kombis
+          </Link>
+          <BackToHome className="text-xs" />
+        </div>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <ShieldCheck className="size-3.5 text-success" />

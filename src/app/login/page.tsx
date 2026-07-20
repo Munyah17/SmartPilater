@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToHome } from "@/components/back-to-home";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
@@ -58,6 +59,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background px-5 py-10">
+      <BackToHome className="absolute left-4 top-4" />
       <ThemeToggle className="absolute right-4 top-4" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}

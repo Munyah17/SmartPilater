@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { VerifyResult } from "@/components/verify/verify-result";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToHome } from "@/components/back-to-home";
 
 export const metadata: Metadata = {
   title: "Verify ticket",
@@ -15,6 +16,7 @@ export default async function VerifyCodePage({
   const { code } = await params;
   return (
     <div className="relative min-h-screen bg-background px-5">
+      <BackToHome className="absolute left-4 top-4" />
       <ThemeToggle className="absolute right-4 top-4" />
       <VerifyResult code={decodeURIComponent(code)} />
     </div>

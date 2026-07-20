@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BackToHome } from "@/components/back-to-home";
 
 /** Manual entry point for inspectors without a scanner. */
 export default function VerifyPage() {
@@ -16,6 +17,7 @@ export default function VerifyPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-5">
+      <BackToHome className="absolute left-4 top-4" />
       <ThemeToggle className="absolute right-4 top-4" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
