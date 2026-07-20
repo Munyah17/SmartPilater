@@ -184,9 +184,9 @@ export function TerminalApp() {
               error instanceof Error ? error.message : "Could not start the payment.",
           });
         } else {
-          // Push-only rail with no number yet (live EcoCash): stay on the
-          // waiting screen so the conductor can capture the phone number.
-          toast.info("Enter the passenger's EcoCash number to send the prompt");
+          // Push-only rail with no number yet (live EcoCash/Paynow): stay on
+          // the waiting screen so the conductor can capture the number.
+          toast.info("Enter the passenger's number to send the prompt");
         }
         return;
       }

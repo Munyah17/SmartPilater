@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   demoConductors,
   demoDrivers,
@@ -227,10 +228,13 @@ export function PublicPayFlow({ vehicleId }: { vehicleId: string }) {
           <ChevronLeft className="size-4" />
           All kombis
         </Link>
-        <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-success" />
-          {live ? "EcoCash sandbox" : "Demo mode"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <ShieldCheck className="size-3.5 text-success" />
+            {live ? "EcoCash sandbox" : "Demo mode"}
+          </span>
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Vehicle card */}

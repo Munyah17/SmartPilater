@@ -35,6 +35,7 @@ function providerLabel(id: PaymentProviderId): string {
 
 const providerOptions: { id: PaymentProviderId; label: string }[] = [
   { id: "ecocash", label: "EcoCash" },
+  { id: "paynow", label: "Paynow" },
   { id: "innbucks", label: "InnBucks" },
   { id: "onemoney", label: "OneMoney" },
   { id: "omari", label: "Omari" },

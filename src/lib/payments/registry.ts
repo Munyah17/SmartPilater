@@ -2,6 +2,7 @@ import type { PaymentProviderId } from "@/types/domain";
 import type { PaymentAdapter } from "./types";
 import { createSimulatedAdapter } from "./providers/simulated";
 import { createEcocashAdapter } from "./providers/ecocash/client";
+import { createPaynowAdapter } from "./providers/paynow/client";
 
 /**
  * Central registry of payment adapters.
@@ -21,6 +22,15 @@ export function isEcocashLive(): boolean {
   return process.env.NEXT_PUBLIC_ECOCASH_ENABLED === "true";
 }
 
+/**
+ * Paynow Express checkout — a fallback USSD-push rail (enter number, click
+ * pay, PIN prompt arrives) usable while the direct EcoCash integration is
+ * blocked on sandbox whitelisting. See .env.example for credentials.
+ */
+export function isPaynowLive(): boolean {
+  return process.env.NEXT_PUBLIC_PAYNOW_ENABLED === "true";
+}
+
 const catalogue: {
   id: PaymentProviderId;
   displayName: string;
@@ -30,7 +40,7 @@ const catalogue: {
   { id: "onemoney", displayName: "OneMoney", flow: "push" },
   { id: "innbucks", displayName: "InnBucks", flow: "qr" },
   { id: "omari", displayName: "Omari", flow: "qr" },
-  { id: "paynow", displayName: "Paynow", flow: "qr" },
+  { id: "paynow", displayName: "Paynow", flow: "push" },
   { id: "pos2u", displayName: "POS2U", flow: "card" },
   { id: "visa", displayName: "Visa", flow: "card" },
   { id: "mastercard", displayName: "Mastercard", flow: "card" },
@@ -44,6 +54,10 @@ for (const entry of catalogue) {
 
 if (isEcocashLive()) {
   adapters.set("ecocash", createEcocashAdapter());
+}
+
+if (isPaynowLive()) {
+  adapters.set("paynow", createPaynowAdapter());
 }
 
 export function getAdapter(id: PaymentProviderId): PaymentAdapter {

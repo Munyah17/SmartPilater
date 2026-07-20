@@ -7,6 +7,7 @@ import { QrCode, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 /** Manual entry point for inspectors without a scanner. */
 export default function VerifyPage() {
@@ -14,7 +15,8 @@ export default function VerifyPage() {
   const [code, setCode] = React.useState("");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-5">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-5">
+      <ThemeToggle className="absolute right-4 top-4" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

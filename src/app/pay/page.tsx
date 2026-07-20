@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BusFront, ChevronRight, QrCode } from "lucide-react";
 import { demoOrg, demoRoutes, demoVehicles } from "@/lib/demo-data";
 import { formatFare } from "@/lib/format";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "Pay your fare",
@@ -22,12 +23,13 @@ export default function PayIndexPage() {
         <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
           <QrCode className="size-5" />
         </div>
-        <div className="leading-tight">
+        <div className="min-w-0 flex-1 leading-tight">
           <h1 className="text-lg font-semibold tracking-tight">Pay your fare</h1>
           <p className="text-xs text-muted-foreground">
             No conductor needed — pay and ride
           </p>
         </div>
+        <ThemeToggle />
       </div>
 
       <p className="mt-5 text-sm text-muted-foreground">

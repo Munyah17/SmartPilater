@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -69,6 +70,7 @@ function Nav() {
           </a>
         </nav>
         <div className="flex items-center gap-2.5">
+          <ThemeToggle />
           <Button variant="ghost" asChild className="hidden sm:inline-flex">
             <Link href="/login">Sign in</Link>
           </Button>
