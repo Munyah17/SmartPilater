@@ -10,6 +10,12 @@ import { createExpressCharge, getPaynowConfig } from "@/lib/payments/providers/p
  * PIN prompt straight to their phone. Used as a fallback rail while the
  * direct EcoCash Instant Payment integration is blocked on sandbox
  * whitelisting.
+ *
+ * Paynow has no sandbox — this route calls their live production API and
+ * can move real money the moment it succeeds. NEXT_PUBLIC_PAYNOW_ENABLED is
+ * checked here too (not just client-side in the adapter registry) so the
+ * kill-switch can't be bypassed by posting to this endpoint directly while
+ * the feature is meant to be off.
  */
 
 const chargeSchema = z.object({
@@ -30,6 +36,13 @@ function normaliseMsisdn(input: string): string | null {
 }
 
 export async function POST(request: Request) {
+  if (process.env.NEXT_PUBLIC_PAYNOW_ENABLED !== "true") {
+    return NextResponse.json(
+      { error: "Paynow Express checkout is disabled on this server." },
+      { status: 503 },
+    );
+  }
+
   const config = getPaynowConfig();
   if (!config) {
     return NextResponse.json(

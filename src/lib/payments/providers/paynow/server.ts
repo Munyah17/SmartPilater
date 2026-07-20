@@ -13,15 +13,18 @@ import { createHash } from "node:crypto";
  * unavailable (e.g. sandbox MSISDN not yet whitelisted): same UX for the
  * conductor and passenger, different upstream gateway.
  *
- * IMPORTANT — unverified: Paynow's request/response hash must be computed
- * by concatenating field VALUES in the exact order Paynow's own SDKs use,
- * then appending the integration key, then SHA-512, uppercased. The field
- * order below follows Paynow's publicly documented integration guide, but
- * has not been confirmed against a live Paynow sandbox (no credentials were
- * available while building this). Get a Paynow integration id + key
- * (instant, free signup at paynow.co.zw) and this should be verified with a
- * real request before relying on it — if Paynow returns "Hash mismatch",
- * the field order is the first thing to check against their SDK source.
+ * The request hash (field VALUES concatenated in the order below, then the
+ * integration key appended, then SHA-512 uppercased) is confirmed correct
+ * against Paynow's live API — verified 2026-07-20 with a real integration
+ * id/key: a deliberately invalid MSISDN (0000000000) got back "The payer's
+ * phone number is invalid" rather than a hash-mismatch error, which only
+ * happens once the hash has already passed.
+ *
+ * IMPORTANT — Paynow has no separate sandbox environment. Every request
+ * here hits their live production API. `NEXT_PUBLIC_PAYNOW_ENABLED` stays
+ * false until a real end-to-end charge (to a real number, for a real small
+ * amount) has been explicitly authorized — flipping it on exposes "Paynow"
+ * as a live, real-money option on the terminal and public pay screens.
  */
 
 export interface PaynowConfig {
