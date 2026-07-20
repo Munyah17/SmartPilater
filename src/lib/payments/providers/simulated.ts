@@ -28,7 +28,7 @@ const intents = new Map<string, SimState>();
 export function createSimulatedAdapter(config: {
   id: PaymentProviderId;
   displayName: string;
-  flow: "qr" | "push" | "card";
+  flow: "qr" | "push" | "card" | "tap";
 }): PaymentAdapter {
   return {
     id: config.id,

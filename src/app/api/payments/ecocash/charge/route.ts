@@ -78,7 +78,12 @@ export async function POST(request: Request) {
         body,
         `EcoCash rejected the charge (HTTP ${httpStatus}).`,
       );
-      return NextResponse.json({ error: message }, { status: 502 });
+      // 4xx from EcoCash is a real, actionable answer (bad MSISDN, unwhitelisted
+      // sandbox number, duplicate correlator, barred wallet) — pass it through
+      // as-is. Only an unexpected upstream failure (5xx, or a shape we can't
+      // parse) is genuinely "we couldn't reach EcoCash properly" (502).
+      const status = httpStatus >= 400 && httpStatus < 500 ? httpStatus : 502;
+      return NextResponse.json({ error: message }, { status });
     }
 
     const mapped = mapEcocashStatus(body);

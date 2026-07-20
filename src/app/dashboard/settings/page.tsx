@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { demoFares, demoOrg } from "@/lib/demo-data";
 import { formatFare } from "@/lib/format";
+import type { Currency } from "@/types/domain";
 
 const orgSchema = z.object({
   tradingName: z.string().min(2, "Trading name is required"),
@@ -52,7 +53,33 @@ export default function SettingsPage() {
   const [kioskMode, setKioskMode] = React.useState(true);
   const [offlineSelling, setOfflineSelling] = React.useState(true);
   const [autoPrint, setAutoPrint] = React.useState(true);
-  const [currency, setCurrency] = React.useState<"USD" | "ZWG">(demoOrg.currency);
+  const [enabledCurrencies, setEnabledCurrencies] = React.useState<Currency[]>(
+    demoOrg.enabledCurrencies,
+  );
+  const [defaultCurrency, setDefaultCurrency] = React.useState<Currency>(
+    demoOrg.currency,
+  );
+
+  const toggleCurrency = (id: Currency, on: boolean) => {
+    if (!on && enabledCurrencies.length === 1) {
+      toast.error("At least one currency must stay accepted");
+      return;
+    }
+    const next = on
+      ? [...enabledCurrencies, id]
+      : enabledCurrencies.filter((c) => c !== id);
+    setEnabledCurrencies(next);
+    // The default drives self-service pay (passengers never choose) — if it
+    // was just switched off, fall back to whatever is still enabled.
+    if (!on && defaultCurrency === id) {
+      setDefaultCurrency(next[0]);
+    }
+    toast.success(`${id === "USD" ? "US Dollar" : "ZiG (ZWG)"} ${on ? "enabled" : "disabled"}`, {
+      description: on
+        ? "Your conductors can now accept this currency."
+        : "Conductors can no longer charge fares in this currency.",
+    });
+  };
 
   const onSubmit = async (values: OrgForm) => {
     // Persists via Supabase once configured; demo mode just confirms.
@@ -146,51 +173,73 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Transacting currency</CardTitle>
+              <CardTitle>Accepted currencies</CardTitle>
               <CardDescription>
-                Applies to fares, receipts and payment rails. Most operators run
-                USD; parastatal fleets run ZiG — and legally every operator must
-                be able to accept ZiG.
+                You choose what your fleet accepts — never the passenger. Most
+                operators run USD only; parastatals must also accept ZiG. Turn
+                on both if your conductors should be able to take either.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                {(
-                  [
-                    {
-                      id: "USD" as const,
-                      label: "US Dollar",
-                      hint: "Street standard — most fleets",
-                    },
-                    {
-                      id: "ZWG" as const,
-                      label: "ZiG (ZWG)",
-                      hint: "Required for parastatals",
-                    },
-                  ]
-                ).map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => {
-                      setCurrency(option.id);
-                      toast.success(`Fleet currency set to ${option.label}`, {
-                        description:
-                          "Terminals pick up the change on next sync; fares keep their numeric values.",
-                      });
-                    }}
-                    className={`rounded-xl border p-4 text-left transition-colors ${
-                      currency === option.id
-                        ? "border-primary bg-primary/5 ring-1 ring-primary"
-                        : "border-border/70 hover:border-primary/40"
-                    }`}
-                  >
-                    <p className="font-semibold">{option.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {option.hint}
+            <CardContent className="space-y-4">
+              {(
+                [
+                  {
+                    id: "USD" as const,
+                    label: "US Dollar",
+                    hint: "Street standard — most fleets",
+                  },
+                  {
+                    id: "ZWG" as const,
+                    label: "ZiG (ZWG)",
+                    hint: "Legally required acceptance",
+                  },
+                ]
+              ).map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center justify-between gap-4"
+                >
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                      {option.label}
+                      {defaultCurrency === option.id && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                          Default
+                        </span>
+                      )}
                     </p>
-                  </button>
-                ))}
+                    <p className="text-xs text-muted-foreground">{option.hint}</p>
+                  </div>
+                  <Switch
+                    checked={enabledCurrencies.includes(option.id)}
+                    onCheckedChange={(v) => toggleCurrency(option.id, v)}
+                  />
+                </div>
+              ))}
+              <Separator />
+              <div className="space-y-2">
+                <Label>Default currency</Label>
+                <p className="text-xs text-muted-foreground">
+                  Used for self-service public pay, where the passenger never
+                  picks — they pay whatever the route requires. Conductors with
+                  more than one currency enabled can still choose per sale.
+                </p>
+                <div className="flex gap-2 pt-1">
+                  {enabledCurrencies.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setDefaultCurrency(id)}
+                      className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        defaultCurrency === id
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border/70 text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      {id === "USD" ? "US Dollar" : "ZiG (ZWG)"}
+                    </button>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>

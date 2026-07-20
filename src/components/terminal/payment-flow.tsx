@@ -3,13 +3,29 @@
 import * as React from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, ChevronLeft, Phone, Printer, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronLeft,
+  CreditCard,
+  Phone,
+  Printer,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatFare, formatMoney, shortRef, formatDateTime } from "@/lib/format";
+import { isNfcSupported, readNfcCard } from "@/lib/nfc/bridge";
 import type { PaymentIntent } from "@/lib/payments/types";
 import type { PaymentProviderId, Ticket } from "@/types/domain";
 import { cn } from "@/lib/utils";
+
+/** Friendlier receipt/label text for providers whose id reads awkwardly raw. */
+const providerLabels: Partial<Record<PaymentProviderId, string>> = {
+  nfc_tap: "Tap Card",
+};
+function providerLabel(id: PaymentProviderId): string {
+  return providerLabels[id] ?? id;
+}
 
 /**
  * Full-screen payment stages rendered over the terminal home:
@@ -45,6 +61,7 @@ export function WaitingScreen({
   provider,
   onProviderChange,
   onPushToPhone,
+  onTapCard,
   onCancel,
 }: {
   intent: PaymentIntent | null;
@@ -55,11 +72,30 @@ export function WaitingScreen({
   onProviderChange: (p: PaymentProviderId) => void;
   /** Option 2: send a wallet USSD push to the passenger's number. */
   onPushToPhone: (msisdn: string) => void;
+  /** Option 3: a contactless bank or commuter card was tapped. */
+  onTapCard: (cardId: string) => void;
   onCancel: () => void;
 }) {
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
   const [phone, setPhone] = React.useState("");
+  const [tapState, setTapState] = React.useState<"idle" | "waiting" | "error">("idle");
+  const [tapError, setTapError] = React.useState("");
+
+  const handleTap = React.useCallback(async () => {
+    setTapState("waiting");
+    setTapError("");
+    try {
+      const { cardId } = await readNfcCard();
+      setTapState("idle");
+      onTapCard(cardId);
+    } catch (error) {
+      setTapState("error");
+      setTapError(
+        error instanceof Error ? error.message : "Could not read the card.",
+      );
+    }
+  }, [onTapCard]);
 
   return (
     <motion.div
@@ -165,6 +201,42 @@ export function WaitingScreen({
           </p>
         </div>
 
+        {/* Option 3: NFC/RFID tap — mounted card readers or a commuter pass.
+            No number to type, no QR to scan: hold the card to the reader. */}
+        <div className="w-full max-w-sm">
+          <p className="mb-2 text-center text-sm font-medium">
+            <span className="mr-1.5 rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary">
+              Option 3
+            </span>
+            Tap a card
+          </p>
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-12 w-full gap-2"
+            disabled={tapState === "waiting"}
+            onClick={() => void handleTap()}
+          >
+            <CreditCard className="size-4" />
+            {tapState === "waiting" ? "Hold card near reader…" : "Tap bank or commuter card"}
+          </Button>
+          {tapError && (
+            <p className="mt-1.5 text-center text-xs text-destructive">{tapError}</p>
+          )}
+          {!isNfcSupported() && (
+            <button
+              type="button"
+              onClick={() => onTapCard(`DEV${Date.now().toString(36).toUpperCase()}`)}
+              className="mt-1.5 block w-full text-center text-xs text-muted-foreground underline underline-offset-2"
+            >
+              No reader attached — simulate a tap (dev)
+            </button>
+          )}
+          <p className="mt-1.5 text-center text-xs text-muted-foreground">
+            Works with contactless bank cards and RFID/NFC commuter passes.
+          </p>
+        </div>
+
         <div className="flex flex-wrap justify-center gap-2">
           {providerOptions.map((option) => (
             <button
@@ -264,7 +336,7 @@ export function SuccessScreen({
           </div>
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Paid via</dt>
-            <dd className="uppercase">{ticket.provider}</dd>
+            <dd className="uppercase">{providerLabel(ticket.provider)}</dd>
           </div>
         </dl>
         <div className="my-3 border-t border-dashed" />

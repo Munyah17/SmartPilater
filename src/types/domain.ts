@@ -33,6 +33,7 @@ export type PaymentProviderId =
   | "visa"
   | "mastercard"
   | "zipit"
+  | "nfc_tap"
   | "cash";
 
 export type PaymentStatus =
@@ -58,8 +59,20 @@ export interface Organization {
   phone: string;
   email: string;
   city: string;
-  /** Transacting currency chosen by the fleet company. */
+  /**
+   * The default currency: what self-service public pay always charges (the
+   * passenger never picks a currency) and the terminal's starting selection.
+   * Must be one of `enabledCurrencies`.
+   */
   currency: Currency;
+  /**
+   * Currencies the fleet accepts at all, chosen by the fleet company — never
+   * by the passenger. USD, ZWG, or both. A conductor/driver with more than
+   * one enabled currency may pick per sale which one a given passenger pays
+   * in; self-service pay always uses `currency` since the passenger has no
+   * say in it.
+   */
+  enabledCurrencies: Currency[];
   createdAt: string;
 }
 
@@ -190,6 +203,8 @@ export interface Ticket {
   currency?: Currency;
   /** Payer MSISDN for wallet-push rails (EcoCash instant payments). */
   payerPhone?: string;
+  /** Card UID for nfc_tap payments (contactless bank card or transit card). */
+  cardId?: string;
 }
 
 export interface Transaction {

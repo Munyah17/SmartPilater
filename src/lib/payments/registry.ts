@@ -24,7 +24,7 @@ export function isEcocashLive(): boolean {
 const catalogue: {
   id: PaymentProviderId;
   displayName: string;
-  flow: "qr" | "push" | "card";
+  flow: "qr" | "push" | "card" | "tap";
 }[] = [
   { id: "ecocash", displayName: "EcoCash", flow: "push" },
   { id: "onemoney", displayName: "OneMoney", flow: "push" },
@@ -35,6 +35,7 @@ const catalogue: {
   { id: "visa", displayName: "Visa", flow: "card" },
   { id: "mastercard", displayName: "Mastercard", flow: "card" },
   { id: "zipit", displayName: "ZIPIT", flow: "qr" },
+  { id: "nfc_tap", displayName: "Tap Card", flow: "tap" },
 ];
 
 for (const entry of catalogue) {

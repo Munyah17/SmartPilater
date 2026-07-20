@@ -42,8 +42,11 @@ export interface PaymentResult {
 export interface PaymentAdapter {
   readonly id: PaymentProviderId;
   readonly displayName: string;
-  /** Wallets that push a prompt to the payer phone vs. scan-to-pay. */
-  readonly flow: "qr" | "push" | "card";
+  /**
+   * qr = scan-to-pay, push = USSD prompt to a phone, card = insert/swipe,
+   * tap = contactless NFC/RFID (bank card or transit card) against a reader.
+   */
+  readonly flow: "qr" | "push" | "card" | "tap";
   readonly supportsRefunds: boolean;
 
   /** Create a payment intent the terminal can render as a QR. */

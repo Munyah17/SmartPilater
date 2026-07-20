@@ -53,6 +53,7 @@ export const demoOrg: Organization = {
   email: "ops@sekeexpress.co.zw",
   city: "Chitungwiza",
   currency: "USD",
+  enabledCurrencies: ["USD", "ZWG"],
   createdAt: "2023-04-12T08:00:00Z",
 };
 

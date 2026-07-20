@@ -32,7 +32,7 @@ import { getAdapter } from "@/lib/payments/registry";
 import type { PaymentIntent } from "@/lib/payments/types";
 import { printReceipt } from "@/lib/receipts/escpos";
 import { useNetworkStatus } from "@/hooks/use-network-status";
-import type { PaymentProviderId, Ticket } from "@/types/domain";
+import type { Currency, PaymentProviderId, Ticket } from "@/types/domain";
 
 /**
  * Terminal application: the conductor's whole world.
@@ -66,6 +66,13 @@ export function TerminalApp() {
   const online = useNetworkStatus();
   const [stage, setStage] = React.useState<Stage>({ name: "home" });
   const [provider, setProvider] = React.useState<PaymentProviderId>("ecocash");
+  /**
+   * Which currency THIS sale charges in. The fleet decides which currencies
+   * are accepted at all (Settings); when more than one is enabled, staff
+   * choose per passenger — unlike public pay, where the passenger never
+   * chooses and always gets the org's default currency.
+   */
+  const [currency, setCurrency] = React.useState<Currency>(demoOrg.currency);
   const [intent, setIntent] = React.useState<PaymentIntent | null>(null);
   const [secondsLeft, setSecondsLeft] = React.useState(PAYMENT_WINDOW_SECONDS);
   const [autoClose, setAutoClose] = React.useState(SUCCESS_AUTO_CLOSE_SECONDS);
@@ -118,6 +125,7 @@ export function TerminalApp() {
       destination: string,
       providerId?: PaymentProviderId,
       payerPhone?: string,
+      cardId?: string,
     ) => {
       const chosenProvider = providerId ?? provider;
       const ticketId = newTicketId();
@@ -141,8 +149,9 @@ export function TerminalApp() {
         issuedAt,
         syncState: "queued",
         channel: "terminal",
-        currency: demoOrg.currency,
+        currency,
         payerPhone,
+        cardId,
       };
       ticketRef.current = ticket;
 
@@ -156,10 +165,14 @@ export function TerminalApp() {
         created = await adapter.createIntent({
           ticketId,
           amountCents,
-          currency: demoOrg.currency,
+          currency,
           description: `${route.name} · ${destination}`,
           payerPhone,
-          metadata: { vehicle: vehicle.registration, terminal: ticket.terminalId },
+          metadata: {
+            vehicle: vehicle.registration,
+            terminal: ticket.terminalId,
+            ...(cardId ? { cardId } : {}),
+          },
         });
       } catch (error) {
         if (payerPhone) {
@@ -216,7 +229,7 @@ export function TerminalApp() {
         }
       }, 1000);
     },
-    [provider, refreshToday, stopPolling],
+    [provider, currency, refreshToday, stopPolling],
   );
 
   const cancelPayment = React.useCallback(async () => {
@@ -337,6 +350,30 @@ export function TerminalApp() {
           </div>
         </section>
 
+        {/* Per-sale currency — only shown when the fleet accepts more than
+            one; staff choose here, unlike public pay where nobody does. */}
+        {demoOrg.enabledCurrencies.length > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              Charging in
+            </span>
+            {demoOrg.enabledCurrencies.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setCurrency(id)}
+                className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+                  currency === id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border/70 bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {id === "USD" ? "US Dollar" : "ZiG"}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Quick fares: the four giant buttons that run the day */}
         <section className="grid flex-1 grid-cols-2 gap-4">
           {demoFares.map((fare, i) => (
@@ -354,7 +391,7 @@ export function TerminalApp() {
                 <p className="text-sm text-muted-foreground">{fare.description}</p>
               </div>
               <p className="text-4xl font-semibold tracking-tight text-primary tabular">
-                {formatFare(fare.amountCents)}
+                {formatFare(fare.amountCents, currency)}
               </p>
             </motion.button>
           ))}
@@ -404,7 +441,10 @@ export function TerminalApp() {
             ))}
           </div>
           <Button size="xl" onClick={submitCustomFare} disabled={!customValue}>
-            Charge {customValue ? formatFare(Math.round(parseFloat(customValue || "0") * 100)) : ""}
+            Charge{" "}
+            {customValue
+              ? formatFare(Math.round(parseFloat(customValue || "0") * 100), currency)
+              : ""}
           </Button>
         </DialogContent>
       </Dialog>
@@ -421,6 +461,15 @@ export function TerminalApp() {
             onProviderChange={switchProvider}
             onPushToPhone={(msisdn) =>
               void startPayment(stage.amountCents, stage.destination, provider, msisdn)
+            }
+            onTapCard={(cardId) =>
+              void startPayment(
+                stage.amountCents,
+                stage.destination,
+                "nfc_tap",
+                undefined,
+                cardId,
+              )
             }
             onCancel={() => void cancelPayment()}
           />

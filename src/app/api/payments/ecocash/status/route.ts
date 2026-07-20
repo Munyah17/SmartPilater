@@ -42,7 +42,8 @@ export async function GET(request: NextRequest) {
         body,
         `EcoCash lookup failed (HTTP ${httpStatus}).`,
       );
-      return NextResponse.json({ error: message }, { status: 502 });
+      const status = httpStatus >= 400 && httpStatus < 500 ? httpStatus : 502;
+      return NextResponse.json({ error: message }, { status });
     }
 
     const mapped = mapEcocashStatus(body);
