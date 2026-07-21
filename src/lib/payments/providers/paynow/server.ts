@@ -135,6 +135,65 @@ export async function createExpressCharge(
   };
 }
 
+export interface HostedCheckoutParams {
+  reference: string;
+  amountCents: number;
+  description: string;
+  /** Where Paynow bounces the browser back to once checkout is done. */
+  returnUrl: string;
+  authEmail?: string;
+}
+
+export interface HostedCheckoutResult {
+  ok: boolean;
+  /** Redirect the browser here — Paynow's own hosted checkout page. */
+  browserUrl?: string;
+  pollUrl?: string;
+  error?: string;
+}
+
+/**
+ * Initiate Paynow's classic hosted checkout: full redirect, Paynow's own
+ * page collects the payment method (EcoCash, OneMoney, card, ZIPIT…) and
+ * handles the whole payer interaction. SmartPilater never sees a phone
+ * number or PIN prompt for this flow — only the final outcome, via the
+ * resultUrl webhook (and the returnUrl bounce-back for the UI).
+ *
+ * Verified against the live API 2026-07-21: a real request (no phone/method
+ * fields — hosted checkout doesn't take them) returned status=Ok with a
+ * genuine browserurl + pollurl.
+ */
+export async function createHostedCheckout(
+  config: PaynowConfig,
+  params: HostedCheckoutParams,
+): Promise<HostedCheckoutResult> {
+  const fields = {
+    id: config.integrationId,
+    reference: params.reference,
+    amount: (params.amountCents / 100).toFixed(2),
+    additionalinfo: params.description.slice(0, 200),
+    returnurl: params.returnUrl,
+    resulturl: config.resultUrl,
+    authemail: params.authEmail ?? "passenger@smartpilater.app",
+    status: "Message",
+  };
+  const hash = generateHash(Object.values(fields), config.integrationKey);
+
+  const body = new URLSearchParams({ ...fields, hash });
+  const response = await fetch(`${PAYNOW_BASE_URL}/initiatetransaction`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+    cache: "no-store",
+  });
+  const parsed = parsePaynowResponse(await response.text());
+
+  if (parsed.status?.toLowerCase() !== "ok") {
+    return { ok: false, error: parsed.error || "Paynow rejected the checkout request." };
+  }
+  return { ok: true, browserUrl: parsed.browserurl, pollUrl: parsed.pollurl };
+}
+
 export interface PollResult {
   ok: boolean;
   status?: string;
